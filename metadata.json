@@ -1,0 +1,13 @@
+{
+  "name": "AI Workstation",
+  "description": "Android-first AI project workstation with shared checkpoints, persistent prompts, and modular bridge execution.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ],
+  "version": "9.1.0",
+  "author": "STNK Team",
+  "admin": "Project Administrator",
+  "adminContact": "Telegram (hidden in UI): @MuhammadDimasRidho",
+  "buildPolicy": "GitHub Actions builds source as-is; no AI code generation or redesign step."
+}
