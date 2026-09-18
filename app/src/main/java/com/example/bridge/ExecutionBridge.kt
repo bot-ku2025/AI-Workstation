@@ -138,20 +138,20 @@ class RealExecutionBridge(private val context: Context) : ExecutionBridge {
     }
 
     override fun execute(request: CommandRequest): Flow<ExecutionLog> = flow {
-        emit(ExecutionLog("BRIDGE", "Android → Termux RUN_COMMAND: memulai task [${request.projectId}]"))
-        emit(ExecutionLog("CONTEXT", "Checkpoint phase=${request.checkpoint.currentPhase}; status=${request.checkpoint.workStatus.label}"))
-        emit(ExecutionLog("PROMPT", "Persistent Prompt: ${request.accumulatedPrompt.lines().size} baris"))
-        emit(ExecutionLog("PROVIDER", "Provider=${request.providerId.uppercase()} YOLO=${request.yoloEnabled}"))
+        emit(ExecutionLog(tag = "BRIDGE", message = "Android → Termux RUN_COMMAND: memulai task [${request.projectId}]"))
+        emit(ExecutionLog(tag = "CONTEXT", message = "Checkpoint phase=${request.checkpoint.currentPhase}; status=${request.checkpoint.workStatus.label}"))
+        emit(ExecutionLog(tag = "PROMPT", message = "Persistent Prompt: ${request.accumulatedPrompt.lines().size} baris"))
+        emit(ExecutionLog(tag = "PROVIDER", message = "Provider=${request.providerId.uppercase()} YOLO=${request.yoloEnabled}"))
 
         val status = checkAvailability("/data/data/com.termux/files/home")
         if (!status.isExecutable) {
-            emit(ExecutionLog("BRIDGE_ERROR", status.message, true))
+            emit(ExecutionLog(tag = "BRIDGE_ERROR", message = status.message, isError = true))
             return@flow
         }
 
         val command = buildProviderCommand(request)
         if (command == null) {
-            emit(ExecutionLog("PROVIDER_ERROR", "Provider ${request.providerId} belum memiliki adapter CLI yang aman/terdefinisi.", true))
+            emit(ExecutionLog(tag = "PROVIDER_ERROR", message = "Provider ${request.providerId} belum memiliki adapter CLI yang aman/terdefinisi.", isError = true))
             return@flow
         }
 
@@ -171,7 +171,7 @@ class RealExecutionBridge(private val context: Context) : ExecutionBridge {
             $command
             rc=$?
             rm -f .ai-workstation-prompt.txt
-            exit $rc
+            exit ${'$'}rc
         """.trimIndent()
 
         val pendingIntent = PendingIntent.getBroadcast(
@@ -198,35 +198,35 @@ class RealExecutionBridge(private val context: Context) : ExecutionBridge {
             context.sendBroadcast(intent)
         } catch (e: SecurityException) {
             pending.remove(requestId)
-            emit(ExecutionLog("PERMISSION_ERROR", "Termux menolak RUN_COMMAND: ${e.message}", true))
+            emit(ExecutionLog(tag = "PERMISSION_ERROR", message = "Termux menolak RUN_COMMAND: ${e.message}", isError = true))
             return@flow
         } catch (e: Exception) {
             pending.remove(requestId)
-            emit(ExecutionLog("IPC_ERROR", "Gagal mengirim command ke Termux: ${e.message}", true))
+            emit(ExecutionLog(tag = "IPC_ERROR", message = "Gagal mengirim command ke Termux: ${e.message}", isError = true))
             return@flow
         }
 
-        emit(ExecutionLog("DISPATCHED", "Command benar-benar dikirim ke Termux. Menunggu exit code..."))
+        emit(ExecutionLog(tag = "DISPATCHED", message = "Command benar-benar dikirim ke Termux. Menunggu exit code..."))
 
         val result = try {
             deferred.await()
         } catch (e: Exception) {
             pending.remove(requestId)
-            emit(ExecutionLog("IPC_ERROR", "Menunggu hasil Termux gagal: ${e.message}", true))
+            emit(ExecutionLog(tag = "IPC_ERROR", message = "Menunggu hasil Termux gagal: ${e.message}", isError = true))
             return@flow
         }
 
         if (result.stdout.isNotBlank()) {
-            emit(ExecutionLog("STDOUT", result.stdout.trimEnd()))
+            emit(ExecutionLog(tag = "STDOUT", message = result.stdout.trimEnd()))
         }
         if (result.stderr.isNotBlank()) {
-            emit(ExecutionLog("STDERR", result.stderr.trimEnd(), result.exitCode != 0))
+            emit(ExecutionLog(tag = "STDERR", message = result.stderr.trimEnd(), isError = result.exitCode != 0))
         }
 
         if (result.exitCode == 0) {
-            emit(ExecutionLog("SUCCESS", "Termux exit code=0. Provider process selesai tanpa error."))
+            emit(ExecutionLog(tag = "SUCCESS", message = "Termux exit code=0. Provider process selesai tanpa error."))
         } else {
-            emit(ExecutionLog("FAILED", "Termux exit code=${result.exitCode}. SUCCESS tidak dicatat.", true))
+            emit(ExecutionLog(tag = "FAILED", message = "Termux exit code=${result.exitCode}. SUCCESS tidak dicatat.", isError = true))
         }
     }
 

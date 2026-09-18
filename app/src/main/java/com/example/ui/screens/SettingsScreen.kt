@@ -20,6 +20,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -545,7 +547,7 @@ fun SettingsScreen(
                 text = "TENTANG APLIKASI / INFO APK",
                 onClick = { viewModel.navigateTo(com.example.ui.viewmodel.Screen.About) },
                 modifier = Modifier.fillMaxWidth(),
-                icon = androidx.compose.material.icons.Icons.Default.Info,
+                icon = Icons.Default.Info,
                 isPrimary = false
             )
 
